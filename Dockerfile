@@ -3,6 +3,7 @@ MAINTAINER alex@cloudware.io
 
 ENV NODE_VERSION 0.10.38
 ENV NPM_VERSION 2.7.3
+ENV CHROME_DEB https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
 
 ENV LANG en_US.UTF-8
 ENV LANGUAGE en_US:en
@@ -19,6 +20,7 @@ RUN apt-get install -y \
   libpango1.0-0 libappindicator1 xdg-utils man \
   --no-install-recommends
 RUN pip install docker-py
+RUN curl -sSLo /tmp/chrome.deb $CHROME_DEB && dpkg -i /tmp/chrome.deb && rm /tmp/chrome.deb
 
 ENV CLOUDSDK_CORE_DISABLE_PROMPTS=1
 ENV CLOUDSDK_PYTHON_SITEPACKAGES=1
