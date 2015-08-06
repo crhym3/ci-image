@@ -12,22 +12,22 @@ RUN apt-get update -qq && apt-get install -qqy locales && \
   localedef -i en_US -f UTF-8 en_US.UTF-8
 
 RUN apt-get install -y \
-	zip unzip ca-certificates curl python-pip gcc libc6-dev make \
-	bzr git mercurial \
+  zip unzip ca-certificates curl python-pip gcc libc6-dev make \
+  bzr git mercurial \
   xvfb libnss3 libgconf2-4 libxi6 libatk1.0-0 libxcursor1 libxss1 libxcomposite1 libasound2 \
   libxtst6 libxrandr2 libgtk2.0-0 libgdk-pixbuf2.0-0 \
   libpango1.0-0 libappindicator1 xdg-utils man \
-	--no-install-recommends
+  --no-install-recommends
 RUN pip install docker-py
 
 ENV CLOUDSDK_CORE_DISABLE_PROMPTS=1
 ENV CLOUDSDK_PYTHON_SITEPACKAGES=1
 ADD https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz /gcloud.tar.gz
-RUN mkdir /gcloud && \
-  tar -xzf /gcloud.tar.gz --strip 1 -C /gcloud && \
-  /gcloud/install.sh && \
-  /gcloud/bin/gcloud components update app -q && \
-  rm -f /gcloud.tar.gz
+RUN mkdir /gcloud \
+  && tar -xzf /gcloud.tar.gz --strip 1 -C /gcloud \
+  && /gcloud/install.sh \
+  && /gcloud/bin/gcloud components update app -q \
+  && rm -f /gcloud.tar.gz
 ENV PATH=/gcloud/bin:$PATH
 
 # verify gpg and sha256: http://nodejs.org/dist/v0.10.31/SHASUMS256.txt.asc
@@ -36,20 +36,20 @@ ENV PATH=/gcloud/bin:$PATH
 RUN gpg --keyserver pool.sks-keyservers.net --recv-keys 7937DFD2AB06298B2293C3187D33FF9D0246406D 114F43EE0176B71C7BC219DD50A3051F888C628D
 
 RUN curl -SLO "http://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.gz" \
-	&& curl -SLO "http://nodejs.org/dist/v$NODE_VERSION/SHASUMS256.txt.asc" \
-	&& gpg --verify SHASUMS256.txt.asc \
-	&& grep " node-v$NODE_VERSION-linux-x64.tar.gz\$" SHASUMS256.txt.asc | sha256sum -c - \
-	&& tar -xzf "node-v$NODE_VERSION-linux-x64.tar.gz" -C /usr/local --strip-components=1 \
-	&& rm "node-v$NODE_VERSION-linux-x64.tar.gz" SHASUMS256.txt.asc \
-	&& npm install -g npm@"$NPM_VERSION" \
-	&& npm cache clear
+  && curl -SLO "http://nodejs.org/dist/v$NODE_VERSION/SHASUMS256.txt.asc" \
+  && gpg --verify SHASUMS256.txt.asc \
+  && grep " node-v$NODE_VERSION-linux-x64.tar.gz\$" SHASUMS256.txt.asc | sha256sum -c - \
+  && tar -xzf "node-v$NODE_VERSION-linux-x64.tar.gz" -C /usr/local --strip-components=1 \
+  && rm "node-v$NODE_VERSION-linux-x64.tar.gz" SHASUMS256.txt.asc \
+  && npm install -g npm@"$NPM_VERSION" \
+  && npm cache clear
 
 RUN npm install -g gulp bower
 
 ENV GOLANG_VERSION 1.4.2
 
 RUN curl -sSL https://golang.org/dl/go$GOLANG_VERSION.src.tar.gz \
-		| tar -C /usr/src -xz
+  | tar -C /usr/src -xz
 
 RUN cd /usr/src/go/src && ./make.bash --no-clean > /dev/null
 
@@ -59,4 +59,3 @@ RUN mkdir -p /go/src
 ENV GOPATH /go
 ENV PATH /go/bin:$PATH
 WORKDIR /go
-
