@@ -14,7 +14,7 @@ RUN apt-get update -qq && apt-get install -qqy locales && \
 RUN apt-get install -y \
   zip unzip ca-certificates curl python-pip gcc libc6-dev make \
   bzr git mercurial \
-  xvfb libnss3 libgconf2-4 libxi6 libatk1.0-0 libxcursor1 libxss1 libxcomposite1 libasound2 \
+  xvfb xauth libnss3 libgconf2-4 libxi6 libatk1.0-0 libxcursor1 libxss1 libxcomposite1 libasound2 \
   libxtst6 libxrandr2 libgtk2.0-0 libgdk-pixbuf2.0-0 \
   libpango1.0-0 libappindicator1 xdg-utils man \
   --no-install-recommends
