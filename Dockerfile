@@ -1,6 +1,7 @@
 FROM buildpack-deps
 MAINTAINER alex@cloudware.io
 
+ENV GOLANG_VERSION 1.4.2
 ENV NODE_VERSION 0.10.38
 ENV NPM_VERSION 2.7.3
 ENV CHROME_DEB https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
@@ -36,7 +37,6 @@ ENV PATH=/gcloud/bin:$PATH
 # gpg: aka "Timothy J Fontaine (Work) <tj.fontaine@joyent.com>"
 # gpg: aka "Julien Gilli <jgilli@fastmail.fm>"
 RUN gpg --keyserver pool.sks-keyservers.net --recv-keys 7937DFD2AB06298B2293C3187D33FF9D0246406D 114F43EE0176B71C7BC219DD50A3051F888C628D
-
 RUN curl -SLO "http://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.gz" \
   && curl -SLO "http://nodejs.org/dist/v$NODE_VERSION/SHASUMS256.txt.asc" \
   && gpg --verify SHASUMS256.txt.asc \
@@ -45,16 +45,11 @@ RUN curl -SLO "http://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x
   && rm "node-v$NODE_VERSION-linux-x64.tar.gz" SHASUMS256.txt.asc \
   && npm install -g npm@"$NPM_VERSION" \
   && npm cache clear
-
 RUN npm install -g gulp bower
-
-ENV GOLANG_VERSION 1.4.2
 
 RUN curl -sSL https://golang.org/dl/go$GOLANG_VERSION.src.tar.gz \
   | tar -C /usr/src -xz
-
 RUN cd /usr/src/go/src && ./make.bash --no-clean > /dev/null
-
 ENV PATH /usr/src/go/bin:$PATH
 
 RUN mkdir -p /go/src
