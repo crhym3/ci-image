@@ -13,12 +13,12 @@ ENV LC_ALL en_US.UTF-8
 RUN apt-get update -qq && \
   apt-get install -qqy locales && localedef -i en_US -f UTF-8 en_US.UTF-8 && \
   apt-get install -y \
-    zip unzip ca-certificates curl python-pip gcc libc6-dev make \
+    zip unzip ca-certificates curl python-pip gcc libc6-dev make man \
     bzr git mercurial \
     openjdk-7-jdk \
     xvfb xauth libnss3 libgconf2-4 libxi6 libatk1.0-0 libxcursor1 libxss1 libxcomposite1 libasound2 \
     libxtst6 libxrandr2 libgtk2.0-0 libgdk-pixbuf2.0-0 \
-    libpango1.0-0 libappindicator1 xdg-utils man \
+    libpango1.0-0 libappindicator1 xdg-utils fonts-liberation \
     --no-install-recommends
 RUN pip install docker-py
 RUN curl -sSLo /tmp/chrome.deb $CHROME_DEB && dpkg -i /tmp/chrome.deb && rm /tmp/chrome.deb
