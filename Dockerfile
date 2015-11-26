@@ -1,58 +1,71 @@
 FROM buildpack-deps
 MAINTAINER alex@cloudware.io
 
-ENV GOLANG_VERSION 1.4.2
-ENV NODE_VERSION 0.10.38
-ENV NPM_VERSION 2.7.3
-ENV CHROME_DEB https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+# Base
+ENV LANG=en_US.UTF-8 \
+    LANGUAGE=en_US:en \
+    LC_ALL=en_US.UTF-8 \
+    CHROME_DEB=https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
 
-ENV LANG en_US.UTF-8
-ENV LANGUAGE en_US:en
-ENV LC_ALL en_US.UTF-8
-
+# gpg keys listed at https://github.com/nodejs/node
+RUN set -ex && \
+  for key in \
+    9554F04D7259F04124DE6B476D5A82AC7E37093B \
+    94AE36675C464D64BAFA68DD7434390BDBE9B9C5 \
+    0034A06D9D9B0064CE8ADF6BF1747F4AD2306D93 \
+    FD3A5288F042B6850C66B31F09FE44734EB7990E \
+    71DCFD284A79C3B38668286BC97EC7A07EDE3FC1 \
+    DD8F2338BAE7501E3DD5AC78C273792F7D83545D \
+  ; do \
+    gpg --keyserver ha.pool.sks-keyservers.net --recv-keys "$key"; \
+  done
 RUN apt-get update -qq && \
-  apt-get install -qqy locales && localedef -i en_US -f UTF-8 en_US.UTF-8 && \
-  apt-get install -y \
-    zip unzip ca-certificates curl python-pip gcc libc6-dev make man \
-    bzr git mercurial \
-    openjdk-7-jdk \
-    xvfb xauth libnss3 libgconf2-4 libxi6 libatk1.0-0 libxcursor1 libxss1 libxcomposite1 libasound2 \
-    libxtst6 libxrandr2 libgtk2.0-0 libgdk-pixbuf2.0-0 \
-    libpango1.0-0 libappindicator1 xdg-utils fonts-liberation \
-    --no-install-recommends
-RUN pip install docker-py
-RUN curl -sSLo /tmp/chrome.deb $CHROME_DEB && dpkg -i /tmp/chrome.deb && rm /tmp/chrome.deb
+	apt-get install -qqy locales && localedef -i en_US -f UTF-8 en_US.UTF-8 && \
+	apt-get install -y \
+		zip unzip ca-certificates curl python-pip gcc libc6-dev make man \
+		bzr git mercurial \
+		openjdk-7-jdk \
+		xvfb xauth libnss3 libgconf2-4 libxi6 libatk1.0-0 libxcursor1 libxss1 libxcomposite1 libasound2 \
+		libxtst6 libxrandr2 libgtk2.0-0 libgdk-pixbuf2.0-0 \
+		libpango1.0-0 libappindicator1 xdg-utils fonts-liberation \
+		--no-install-recommends && \
+	pip install docker-py && \
+	curl -sSLo /tmp/chrome.deb $CHROME_DEB && \
+	dpkg -i /tmp/chrome.deb && rm /tmp/chrome.deb
 
-ENV CLOUDSDK_CORE_DISABLE_PROMPTS=1
-ENV CLOUDSDK_PYTHON_SITEPACKAGES=1
+
+# Google Cloud
+ENV CLOUDSDK_CORE_DISABLE_PROMPTS=1 \
+    CLOUDSDK_PYTHON_SITEPACKAGES=1
 ADD https://dl.google.com/dl/cloudsdk/release/google-cloud-sdk.tar.gz /gcloud.tar.gz
-RUN mkdir /gcloud \
-  && tar -xzf /gcloud.tar.gz --strip 1 -C /gcloud \
-  && /gcloud/install.sh \
-  && /gcloud/bin/gcloud components update app -q \
-  && rm -f /gcloud.tar.gz
-ENV PATH=/gcloud/bin:$PATH
+RUN mkdir /gcloud && \
+	tar -xzf /gcloud.tar.gz --strip 1 -C /gcloud && \
+	/gcloud/install.sh && \
+	/gcloud/bin/gcloud components update app -q && \
+	rm -f /gcloud.tar.gz
 
-# verify gpg and sha256: http://nodejs.org/dist/v0.10.31/SHASUMS256.txt.asc
-# gpg: aka "Timothy J Fontaine (Work) <tj.fontaine@joyent.com>"
-# gpg: aka "Julien Gilli <jgilli@fastmail.fm>"
-RUN gpg --keyserver pool.sks-keyservers.net --recv-keys 7937DFD2AB06298B2293C3187D33FF9D0246406D 114F43EE0176B71C7BC219DD50A3051F888C628D
-RUN curl -SLO "http://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.gz" \
-  && curl -SLO "http://nodejs.org/dist/v$NODE_VERSION/SHASUMS256.txt.asc" \
-  && gpg --verify SHASUMS256.txt.asc \
-  && grep " node-v$NODE_VERSION-linux-x64.tar.gz\$" SHASUMS256.txt.asc | sha256sum -c - \
-  && tar -xzf "node-v$NODE_VERSION-linux-x64.tar.gz" -C /usr/local --strip-components=1 \
-  && rm "node-v$NODE_VERSION-linux-x64.tar.gz" SHASUMS256.txt.asc \
-  && npm install -g npm@"$NPM_VERSION" \
-  && npm cache clear
-RUN npm install -g gulp bower
+# Go
+ENV GOLANG_VERSION=1.5.1 \
+    GOLANG_SHA1=46eecd290d8803887dec718c691cc243f2175fe0
+RUN curl -fsSL https://golang.org/dl/go$GOLANG_VERSION.linux-amd64.tar.gz -o /tmp/go.tar.gz && \
+	echo "$GOLANG_SHA1  /tmp/go.tar.gz" | sha1sum -c - && \
+	tar -C /usr/local -xzf /tmp/go.tar.gz && \
+	rm /tmp/go.tar.gz
 
-RUN curl -sSL https://golang.org/dl/go$GOLANG_VERSION.src.tar.gz \
-  | tar -C /usr/src -xz
-RUN cd /usr/src/go/src && ./make.bash --no-clean > /dev/null
-ENV PATH /usr/src/go/bin:$PATH
+# Node.js
+ENV NODE_VERSION=0.12.8 NPM_VERSION=3.4.1
+RUN curl -SLO "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-x64.tar.gz" && \
+	curl -SLO "https://nodejs.org/dist/v$NODE_VERSION/SHASUMS256.txt.asc" && \
+	gpg --verify SHASUMS256.txt.asc && \
+	grep " node-v$NODE_VERSION-linux-x64.tar.gz\$" SHASUMS256.txt.asc | sha256sum -c - && \
+	tar -xzf "node-v$NODE_VERSION-linux-x64.tar.gz" -C /usr/local --strip-components=1 && \
+	rm "node-v$NODE_VERSION-linux-x64.tar.gz" SHASUMS256.txt.asc && \
+	npm install -q -g npm@"$NPM_VERSION" && \
+	npm cache clear && \
+	npm install -q -g gulp bower
 
+# Workspace
 RUN mkdir -p /go/src
-ENV GOPATH /go
-ENV PATH /go/bin:$PATH
+ENV GOPATH=/go \
+    PATH=/go/bin:/usr/local/go/bin:/gcloud/bin:$PATH
 WORKDIR /go
