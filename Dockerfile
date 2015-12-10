@@ -64,6 +64,18 @@ RUN curl -SLO "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION-linux-
 	npm cache clear && \
 	npm install -q -g gulp bower
 
+# Ruby with rbenv
+ENV RUBY_VERSION=2.2.0 \
+    PATH=/rbenv/bin:$PATH
+RUN git clone https://github.com/rbenv/rbenv.git /rbenv && \
+	git clone https://github.com/rbenv/ruby-build.git /rbenv/plugins/ruby-build && \
+	/rbenv/plugins/ruby-build/install.sh && \
+	eval "$(rbenv init -)" && \
+	rbenv install 2.2.0 && \
+	rbenv global 2.2.0 && \
+	echo 'gem: --no-rdoc --no-ri' >> /etc/gemrc && \
+	gem install bundler
+
 # Workspace
 RUN mkdir -p /go/src
 ENV GOPATH=/go \
