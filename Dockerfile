@@ -76,6 +76,13 @@ RUN git clone https://github.com/rbenv/rbenv.git /rbenv && \
 	echo 'gem: --no-rdoc --no-ri' >> /etc/gemrc && \
 	gem install bundler
 
+# Other tools
+RUN git clone https://github.com/sass/libsass.git && \
+	git clone https://github.com/sass/sassc.git && \
+	cd sassc && export SASS_LIBSASS_PATH=../libsass && \
+	make install && \
+	cd .. && rm -rf libsass sassc
+
 # Workspace
 RUN mkdir -p /go/src
 ENV GOPATH=/go \
